@@ -54,7 +54,11 @@ function numBR(v) {
 }
 
 const brl = (v) => (v ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) : "—");
-const compacto = (v) => (!v ? "—" : v >= 1e6 ? `R$ ${(v / 1e6).toFixed(2).replace(".", ",")}M` : `R$ ${(v / 1e3).toFixed(0)}k`);
+const compacto = (v) => {
+  const n = Number(v);
+  if (!n || isNaN(n)) return "—";
+  return n >= 1e6 ? `R$ ${(n / 1e6).toFixed(2).replace(".", ",")}M` : `R$ ${(n / 1e3).toFixed(0)}k`;
+};
 const dataBR = (iso) => {
   if (!iso) return "—";
   const d = new Date(String(iso).trim() + "T12:00:00");
@@ -172,7 +176,7 @@ export default function PainelOtimizaTax() {
     fechados: noPeriodo.length,
     ativos: ativos.length,
     passivo: ativos.reduce((s, c) => s + c.passivo, 0),
-    honorarios: noPeriodo.reduce((s, c) => s + c.honorarioFixo, 0),
+    honorarios: noPeriodo.reduce((s, c) => s + (Number(c.honorarioFixo) || 0), 0),
     pendencias: ativos.reduce((s, c) => s + c.pendencias.length, 0),
     aClassificar: noPeriodo.filter((c) => c.situacao === "A classificar").length,
   };
@@ -249,7 +253,7 @@ export default function PainelOtimizaTax() {
                 { n: resumo.fechados, r: "Contratos fechados" },
                 { n: resumo.ativos, r: "Contratos ativos" },
                 { n: compacto(resumo.passivo), r: "Passivo sob gestão" },
-                { n: compacto(resumo.honorarios), r: "Honorários pactuados" },
+                { n: compacto(resumo.honorarios), r: "Honorários iniciais pactuados" },
                 { n: resumo.pendencias, r: "Pendências abertas", alerta: resumo.pendencias > 0 },
                 { n: resumo.aClassificar, r: "A classificar", alerta: resumo.aClassificar > 0 },
               ].map((k) => (
